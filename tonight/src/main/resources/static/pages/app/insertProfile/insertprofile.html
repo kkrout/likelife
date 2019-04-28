@@ -1,0 +1,42 @@
+<template>
+    <div>
+        <div>
+            <el-form ref="form1" :model="form1" label-width="80px" style="width: 400px">
+                <el-form-item >
+                    profile:
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <el-input
+                            size="small"
+                            v-model="form1.profiles[0].profile"
+                            placeholder="请输入profile"
+                            class="el-input1">
+                    </el-input>
+                </el-form-item>
+                <el-form-item >
+                    url:
+                    &nbsp;&nbsp;
+                    &nbsp;&nbsp;<el-input
+                        type="textarea"
+                        autosize
+                        v-model="form1.profiles[0].url"
+                        placeholder="请输入url"
+                        class="el-input2">
+                </el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="insertProfile">立即添加</el-button>
+                    <el-button @click="cancelProfile">取 消</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+</template>
+<style>
+    .el-input1{
+        width: 50mm;
+    }
+    .el-input2{
+        width: 60mm;
+    }
+</style>
+<script type="text/javascript" src="pages/app/insertProfile/insertprofile.js"></script>

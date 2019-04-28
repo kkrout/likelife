@@ -1,0 +1,67 @@
+<template>
+    <div>
+        <div>
+            <el-form ref="form1" :model="form1" label-width="80px" style="width: 400px">
+                <el-form-item>
+                    ID:
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <el-input
+                            size="small"
+                            v-model="form1.appId"
+                            placeholder="请输入应用ID"
+                            class="el-input1">
+                    </el-input>
+                </el-form-item>
+                <el-form-item >
+                    应用名称:
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <el-input
+                            size="small"
+                            v-model="form1.appName"
+                            placeholder="请输入应用名称"
+                            class="el-input1">
+                    </el-input>
+                </el-form-item>
+                <el-form-item >
+                    应用描述:
+                    &nbsp;&nbsp;
+                    &nbsp;&nbsp;<el-input
+                        type="textarea"
+                        autosize
+                        v-model="form1.appDesc"
+                        placeholder="请输入应用描述"
+                        class="el-input2">
+                </el-input>
+                </el-form-item>
+                <el-form-item >
+                    应用负责人:
+                    &nbsp;
+                    <el-input
+                            size="small"
+                            v-model="form1.appLeader"
+                            placeholder="负责人"
+                            class="el-input3">
+                    </el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="insertApp('form1')">立即添加</el-button>
+                    <el-button @click="resetApp('form1')">重置</el-button>
+                    <el-button @click="cancelApp">取 消</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+</template>
+<style>
+    .el-input1{
+        width: 50mm;
+    }
+    .el-input2{
+        width: 60mm;
+    }
+    .el-input3{
+        width: 20mm;
+    }
+</style>
+<script type="text/javascript" src="pages/app/insertApp/insertapp.js"></script>
