@@ -20,17 +20,26 @@ var App = (function ($) {
     var localData = {};
 
     /*************** 设置本地缓存 ****************/
-    app.putData = function(key,data){
-        localData[key] = data;
+    app.putData = function(key,data,cache){
+
+        data = data || '';
+        var menuFlag = this.MainVueApp.activeMenuId.split("@")[0];
+        localData[menuFlag+key] = data;
+        //如果无需本地缓存
+        if ( cache === false ) return data;
         try{
-            window.localStorage.setItem(localPrefix+key,JSON.stringify(data));
+            window.localStorage.setItem(localPrefix+menuFlag+key,JSON.stringify(data));
         }catch (e) { console.log("存储异常："+e) }
     }
-    app.getData = function(key){
-        var data = localData[key];
+    app.getData = function(key,cache){
+        var menuFlag = this.MainVueApp.activeMenuId.split("@")[0];
+        var data = localData[menuFlag+key];
+        //如果无需本地缓存
+        if ( cache === false ) return data;
+
         if ( !data ){
             try {
-                data = window.localStorage.getItem(localPrefix + key);
+                data = window.localStorage.getItem(localPrefix + menuFlag + key);
                 if (data != null && data != undefined) {
                     return JSON.parse(data);
                 }
@@ -41,17 +50,18 @@ var App = (function ($) {
     /*************** 设置本地缓存 ****************/
 
     app.removeData = function(key){
-        delete localData[key];
-        window.localStorage.removeItem(localPrefix + key);
+        var menuFlag = this.MainVueApp.activeMenuId.split("@")[0];
+        delete localData[menuFlag+key];
+        window.localStorage.removeItem(localPrefix + menuFlag + key);
     }
 
     /* 关闭当前页面 */
     app.closeCurrentTagNav = function(){
-       this.MainVueApp.closeCurrentTagNav();
+        this.MainVueApp.closeCurrentTagNav();
     };
 
     app.isEmpty = function(obj){
-        return obj == null || obj == undefined || obj == "";
+        return obj == null || obj == undefined || obj === "";
     }
 
     /* 分页对象 PageInfo返回封装对象*/
@@ -61,7 +71,8 @@ var App = (function ($) {
         if ( p.content ){
             //mongo类型
             this.list = p.content || [];
-            this.pageNum = p.number || 1;
+            //mongo分页有问题，不设置分页
+            // this.pageNum = p.number !== undefined ? p.number + 1 : 1;
             this.pageSize = p.size || 10;
             this.pages = p.totalPages || 1;
             this.total = p.totalElements || 0;
@@ -80,11 +91,11 @@ var App = (function ($) {
         p = p || {};
         this.list = p.content || [];
         this.pageNum = p.pageNum || 1;
-        this.pageSize = p.pageSize || 10;
+        this.pageSize = p.size || 15;
         this.pages = p.totalPages || 1;
         this.total = p.totalElements || 0;
     }
-    
+
 
     /* 获取oss访问地址 */
     app.getOssAccessUrl = function (buck, key) {
@@ -101,78 +112,31 @@ var App = (function ($) {
 
     app.requestCache = new Map();
 
-    //获取app高度
-    app.height = function () {
-        return $(App.MainVueApp.$el).height();
-    }
-
-    //获取模块高度
-    app.moduleHeight = function () {
-        var layoutH = document.body.clientHeight - App.MainVueApp.moduleDiff;
-        var tagH = App.MainVueApp.tagsNavHeight;
-        return layoutH - tagH;
-    }
-
-    //计算高度属性，需要传递hh头高度才能计算得出，默认为0
-    var computedHeight = function (hh) {
-        var hh = hh || 0;
-        let modulePadding = 18 * 2;//模块内边距
-        let rang = 10;//误差
-        let pgH = 32 + modulePadding + rang;
-        var minH = 100;
-        var contentH = app.moduleHeight() - hh - pgH;
-        return contentH < minH ? minH : contentH;
-    };
-
-    /*
-    * moduleComp，必须组件中直接传递this
-    * headH  头高度默认0，如果为数组则自动填充多个属性的高度格式
-    * [
-    *   {prop:'tableAptHeight',hh:'100'}
-    * ]
-    * */
-    app.acptTableHeight = function (moduleComp, headH) {
-        var work_ = function () {
-            if ($.isArray(headH)) {
-                $.each(headH, function () {
-                    if (!(this.prop in moduleComp)) {
-                        console.error('你的组建要定义' + this.prop + '属性');
-                        //跳出循环
-                        return false
-                    }
-                    moduleComp[this.prop] = computedHeight(this.hh || 0);
-                })
-            } else {
-                moduleComp.tableAptHeight = computedHeight(headH || 0);
-            }
-            if ( navigator.userAgent.indexOf("Firefox") != -1){
-                App.MainVueApp.moduleHeight = (document.body.clientHeight-60) + 'px';
-            }
-        };
-
-        work_();
-        //解决resize频繁更新问题
-        var count_ = 0;
-        $(window).off('resize').on('resize', function () {
-            var self_ = ++count_;
-            if ( self_ < count_){
-                return;
-            }
-            setTimeout(work_,500)
-        });
-    }
-
-    //注册组件
-    app.register = function (compent) {
-        if (!compent.template) {
-            app.error('组件template为空')
-        } else {
-            return Vue.component(compent.template.substring(1), compent);
+    app.convertToComp = function(url){
+        if ( !url || url.indexOf('.') == -1 ) return "";
+        if ( url.indexOf('#') == 0 ){
+            url = url.substring(1);
         }
-    }
 
+        // if ( url.indexOf('?') != -1 ){
+        //    url = url.substring(0,url.indexOf('?'));
+        // }\
+        let url1 = url.substring(0,url.indexOf('.'));
+        let url2 = url.substring(url.indexOf('.')+5);
+        url =url1+url2;
+        url = url.replace(/\//gi,'-')
+        return url;
+    },
+
+        app.mouleTemplate = {};
+    app.mouleTemplateCallback = {};
     app.moule =function(compent){
-        this.currentMoule = compent;
+        var compId = this.convertToComp(window.location.hash);
+        compent.template = this.mouleTemplate[compId];
+        var m = Vue.component(compId, compent);
+        this.mouleTemplateCallback[compId] && this.mouleTemplateCallback[compId](compId);
+        delete this.mouleTemplate[compId];
+        delete this.mouleTemplateCallback[compId];
     }
 
     //设置主App应用
@@ -183,12 +147,15 @@ var App = (function ($) {
     //显示loadding蒙层
     app.showLoadding = function (message, timeout, ajax) {
         try {
-            this.currentLoading && this.currentLoading.close();
-            this.currentLoading = this.MainVueApp.$loading({
-                lock: true,
-                text: message || '加载中...',
-                spinner: 'el-icon-loading',
-                background: 'rgba(0, 0, 0, 0.7)'
+            this.currentLoading && this.currentLoading();
+            this.currentLoading = this.MainVueApp.$Message.loading({
+                content: message || '加载中...',
+                duration: timeout || 60,
+                closable: ajax ? true : false,
+                onClose: function () {
+                    //结束请求
+                    ajax && ajax.abort && ajax.abort();
+                }
             })
         } catch (e) {
             console.log('显示loading错误' + e)
@@ -197,7 +164,7 @@ var App = (function ($) {
     //隐藏蒙层
     app.hideLoading = function () {
         try {
-            this.currentLoading && this.currentLoading.close();
+            this.currentLoading && this.currentLoading();
         } catch (e) {
             console.log('隐藏loading错误' + e)
         }
@@ -207,9 +174,9 @@ var App = (function ($) {
     app.info = function (msg, timeout, closable) {
         this.MainVueApp.$message({
             type:"info",
-            showClose: closable || true,
-            message:msg,
-            duration: timeout || 3*1000,
+            message: msg,
+            duration: timeout*1000  || 3000,
+            showClose: closable || true
         });
     }
 
@@ -217,9 +184,9 @@ var App = (function ($) {
     app.success = function (msg, timeout, closable) {
         this.MainVueApp.$message({
             type:"success",
-            showClose: closable || true,
-            message:msg,
-            duration: timeout || 3*1000,
+            message: msg,
+            duration: timeout*1000 || 3000,
+            showClose: closable || true
         });
     }
 
@@ -227,15 +194,20 @@ var App = (function ($) {
     app.warning = function (msg, timeout, closable) {
         this.MainVueApp.$message({
             type:"warning",
-            showClose: closable || true,
-            message:msg,
-            duration: timeout || 3*1000,
+            message: msg,
+            duration: timeout*1000 || 3000,
+            showClose: closable || true
         });
     }
 
     //弹出错误toast
     app.error = function (msg, timeout, closable) {
-        this.MainVueApp.$message.error(msg);
+        this.MainVueApp.$message({
+            type:"error",
+            message: msg,
+            duration: timeout*1000 || 3000,
+            showClose: closable || true
+        });
     }
 
     //debug
@@ -245,7 +217,216 @@ var App = (function ($) {
         }
     }
 
+    app.confirm = function(title,then,cancel){
+        this.MainVueApp.$confirm(title || '确认提示', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(then).catch(cancel);
+    }
 
+    var convertParam = function(data){
+        for (var r in data){
+            var d = data[r];
+            //将集合转换为正确的数组格式
+            if ( d && $.isArray(d) && d.length ){
+                d.forEach((item,i)=>{
+                    data[r+"["+i+"]"] = item;
+                });
+                delete data[r];
+            }
+        }
+        return data;
+    };
+
+    app.ajax = function (options, data) {
+
+
+        //默认ajax请求
+        let defOpt = {
+            type: null,
+            dataType: "json",
+            showLoad: true,
+            cached: false,
+            modal: null,
+            button: null,
+            loadArea:null,
+            post: function () {
+                this.type = "post";
+                $.ajax(finalOpt);
+            },
+            get: function () {
+                this.type = "get";
+                $.ajax(finalOpt);
+            },
+            setUrl: function (url) {
+                this.url = contextPath + url;
+                if (this.url.substring(0, 2) === "//") {
+                    this.url = this.url.substring(1);
+                }
+                return this;
+            },
+            setModal: function (modal) {
+                this.modal = modal;
+                return this;
+            },
+            setDataType: function (dataType) {
+                this.dataType = dataType;
+                return this;
+            },
+            setLoadArea(area) {
+                this.loadArea = area;
+                return this;
+            },
+            setButton(btn) {
+                this.button = btn;
+                return this;
+            },
+            useCache: function () {
+                this.cached = true;
+                return this;
+            },
+            synced: function () {
+                this.async = false;
+                return this;
+            },
+            setData: function (d) {
+                this.contentType = 'application/json;charset=utf-8';
+                this.data = JSON.stringify(d);
+                return this;
+            },
+            hideLoad: function () {
+                this.showLoad = false;
+                return this;
+            },
+            beforeSend: function (xhr) {
+                if (this.button && typeof this.button === 'object') {
+                    this.button.loading = true;
+                }else if ( this.loadArea ){
+                    this.loadArea.$set(this.loadArea,'loading',true)
+                }else {
+                    const app_ = this.modal || app;
+                    this.showLoad && app_.showLoadding(null, null, xhr);
+                }
+                this.beforeCallback && this.beforeCallback.call(this,xhr);
+                var token = window.localStorage.getItem('Header-M-Auth-Token');
+                xhr.setRequestHeader('M-Auth-Token',token);
+            },
+            complete: function () {
+                if (this.button && typeof this.button === 'object') {
+                    this.button.loading = false;
+                }else if( this.loadArea ){
+                    this.loadArea.$set(this.loadArea,'loading',false)
+                }else {
+                    const app_ = this.modal || app;
+                    this.showLoad && app_.hideLoading();
+                }
+                this.completeCallback && this.completeCallback();
+            },
+            success: function (res) {
+                if (this.successCallback2) {
+                    return this.successCallback2(res);
+                }
+                if (res.success) {
+                    //如果激活了缓存，则保存缓存
+                    if ((!this.type || this.type.toLowerCase() === 'get') && this.cached) {
+                        app.requestCache.set(this.url,$.extend(true,{},res))
+                    }
+                    this.successCallback && this.successCallback(res);
+                } else {
+                    if (this.errorCallback2) {
+                        return this.errorCallback2(res);
+                    }
+                    res.message && app.error(res.message);
+                    this.errorCallback && this.errorCallback(res);
+                }
+            },
+            error: function (xhr) {
+                if (this.errorCallback2) {
+                    return this.errorCallback2(xhr.responseJSON, xhr);
+                }
+                const dataJson = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (xhr.status === 401) {
+                    if (dataJson && dataJson.code === 10060) {
+                        app.error('登录超时，请重新登录!');
+                        app.MainVueApp.callLogin(this);
+                        return;
+                    }
+                } else if (xhr.status === 403) {
+                    app.error('您没有浏览该页面的权限');
+                } else if (xhr.status === 404) {
+                    app.error('您访问的页面不存在');
+                } else if (xhr.status === 500) {
+                    if (dataJson.message) {
+                        app.error(dataJson.message);
+                    } else {
+                        app.error('页面内部错误，请联系管理员');
+                    }
+                } else if (xhr.status === 405) {
+                    app.error('请求方法错误');
+                } else {
+                    app.error('无法访问服务器，请检查网络');
+                }
+                this.errorCallback && this.errorCallback(xhr.responseJSON, xhr);
+            },
+            callBefore: function (callback) {
+                this.beforeCallback = callback;
+                return this;
+            },
+            callComplete: function (callback) {
+                this.completeCallback = callback;
+                return this;
+            },
+            callError: function (callback) {
+                this.errorCallback = callback;
+                return this;
+            },
+            callSuccess: function (callback) {
+                this.successCallback = callback;
+                return this;
+            },
+            handError: function (callback) {
+                this.errorCallback2 = callback;
+                return this;
+            },
+            handSuccess: function (callback) {
+                this.successCallback2 = callback;
+                return this;
+            }
+        };
+
+        let finalOpt;
+        //第一个参数是string，直接引用默认属性，否则为对象类型，直接复制对象
+        if (typeof options === 'string') {
+            finalOpt = defOpt.setUrl(options);
+            finalOpt.data = convertParam(data);
+        } else {
+            finalOpt = $.extend(defOpt, options);
+            finalOpt.url = contextPath + finalOpt.url;
+            //设置参数
+            if (data) {
+                //处理数据
+                finalOpt.data = convertParam(data);
+            }
+            if (finalOpt.url.substring(0, 2) === "//") {
+                finalOpt.url = finalOpt.url.substring(1);
+            }
+        }
+
+        //判断是否从缓存中获取
+        if (finalOpt.cached) {
+            const ps = finalOpt.data ? $.param(finalOpt.data) : "";
+            const key = finalOpt.url.indexOf('?') === -1 && ps ? finalOpt.url + "?" + ps :finalOpt.url + ps;
+            const exitsCache = app.requestCache.get(key);
+            if (exitsCache) {
+                finalOpt.successCallback && finalOpt.successCallback($.extend(true,{},exitsCache));
+                return;
+            }
+        }
+        return finalOpt;
+    };
+
+    /** 此方法经测试有同步的问题,建议使用app.ajax方法 */
     app.request = function (options, data) {
 
         //默认ajax请求
@@ -254,6 +435,8 @@ var App = (function ($) {
             dataType: "json",
             showLoad: true,
             cached: false,
+            modal: null,
+            button: null,
             loadArea:null,
             setUrl: function (url) {
                 this.url = contextPath + url;
@@ -262,12 +445,20 @@ var App = (function ($) {
                 }
                 return this;
             },
+            setModal: function (modal) {
+                this.modal = modal;
+                return this;
+            },
             setType: function (type) {
                 this.type = type;
                 return this;
             },
             setLoadArea(area) {
                 this.loadArea = area;
+                return this;
+            },
+            setButton(btn) {
+                this.button = btn;
                 return this;
             },
             post: function () {
@@ -292,19 +483,26 @@ var App = (function ($) {
                 return this;
             },
             beforeSend: function (xhr) {
-                if ( this.loadArea ){
+                if (this.button && typeof this.button === 'object') {
+                    this.button.loading = true;
+                }else if ( this.loadArea ){
                     this.loadArea.$set(this.loadArea,'loading',true)
-                }else{
-                    this.showLoad && App.showLoadding(null, null, xhr);
+                }else {
+                    var app_ = this.modal || app;
+                    this.showLoad && app_.showLoadding(null, null, xhr);
                 }
                 this.beforeCallback && this.beforeCallback.call(this,xhr);
+                var token = window.localStorage.getItem('Header-M-Auth-Token');
+                xhr.setRequestHeader('M-Auth-Token',token);
             },
             complete: function () {
-
-                if ( this.loadArea ){
+                if (this.button && typeof this.button === 'object') {
+                    this.button.loading = false;
+                }else if( this.loadArea ){
                     this.loadArea.$set(this.loadArea,'loading',false)
-                }else{
-                    this.showLoad && App.hideLoading();
+                }else {
+                    var app_ = this.modal || app;
+                    this.showLoad && app_.hideLoading();
                 }
                 this.completeCallback && this.completeCallback();
             },
@@ -447,12 +645,33 @@ var App = (function ($) {
      */
     app.openModule = function (moudelFlag, name, url) {
         var mainApp = this.MainVueApp;
-        var tabNav = new NavObject(mainApp.activeName + "@" + moudelFlag, "#" + url, name);
+        var activityId = mainApp.activeMenuId;
+        //最原始的menuId
+        var menuId = activityId.split('@')[0];
+        var tabNav = new NavObject(menuId + "@" + moudelFlag, "#" + url, name);
         mainApp.addSubPageTag(tabNav);
+    }
+
+    /**
+     *该模块是否已打开
+     * @param subMenuFlag 子模块标识
+     * @param url 模块url
+     * @param name 模块名称
+     */
+    app.isExistModule  = function (moudelFlag, name, url) {
+        var mainApp = this.MainVueApp;
+        var tabNav = new NavObject(mainApp.activeMenuId + "@" + moudelFlag, "#" + url, name);
+        return mainApp.isSubPageTag(tabNav);
     }
 
     app.openResource = function(url){
         window.location.hash = url;
+    }
+
+    // 跳转到相关页面并刷新页面
+    app.openReloadModel = function (url){
+        window.location.hash = url;
+        window.location.reload()
     }
 
     return app;
@@ -492,4 +711,13 @@ Date.prototype.format = function(format) {
         }
     }
     return format;
+}
+
+//原生的日期转换函数有问题，这里需要重写
+Date.prototype.toJSON = function(){
+    return this.format("yyyy-MM-dd hh:mm:ss")
+}
+//这个也重写算了
+Date.prototype.toString = function(){
+    return this.format("yyyy-MM-dd hh:mm:ss")
 }

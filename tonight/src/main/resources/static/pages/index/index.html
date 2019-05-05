@@ -30,16 +30,18 @@
         <el-container >
             <el-aside :width="menuWidth" class="main-aside" >
                 <!-- 菜单 -->
-                <d-menu :list="menuList" @close="closeMenu" ></d-menu>
+                <d-menu ref="menu" :value="activeMenuId" :list="menuList" @close="closeMenu" @select="menuSelect" ></d-menu>
             </el-aside>
             <el-main style="padding:0px;margin:0px;">
                 <el-container>
                     <el-header class="main-head" height="40px" >
                         <!-- 导航 -->
-                        <d-tag-nav></d-tag-nav>
+                        <d-tag-nav ref="tagNav" @on-switch="switchComp" ></d-tag-nav>
                     </el-header>
                     <el-main class="main-content" v-scroll >
-
+                        <keep-alive :include="cacheList">
+                            <component ref="moduleComp" :is="componentId"></component>
+                        </keep-alive>
                     </el-main>
                 </el-container>
             </el-main>

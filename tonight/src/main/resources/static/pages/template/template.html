@@ -1,24 +1,39 @@
 <title>演示-展示界面</title>
 <template>
-    <div>
-        <el-card class="box-card">
-            <div slot="header" >
+    <div style="height: 100%;">
+        <div>
+            <el-form size="mini" label-width="80px" inline>
+                <el-form-item label="姓名" label-width="60px">
+                    <el-input  ></el-input>
+                </el-form-item>
+                <el-form-item label="日期">
+                    <el-input ></el-input>
+                </el-form-item>
+                <el-form-item label="活动名称">
+                    <el-input ></el-input>
+                </el-form-item>
+            </el-form>
+            <div style="padding-left:20px;">
                 <el-button-group>
+                    <el-button size="mini" type="primary" icon="el-icon-edit" @click="create" >查询</el-button>
                     <el-button size="mini" type="primary" icon="el-icon-edit" @click="create" >新增</el-button>
                     <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteBatch">删除</el-button>
                 </el-button-group>
-                <span style="float: right; padding: 3px 0">
-                    <el-input placeholder="搜索" size="mini" suffix-icon="el-icon-search" >
-                    </el-input>
-                </span>
+                <!--<span style="float: right; padding: 3px 0">-->
+                <!--<el-input placeholder="搜索" size="mini" suffix-icon="el-icon-search" >-->
+                <!--</el-input>-->
+                <!--</span>-->
             </div>
+            <el-divider style="margin:12px 0px;" ></el-divider>
+        </div>
+        <div style="height: calc(100% - 150px)">
             <el-table  size="mini" ref="table" :data="tableData" stripe @selection-change="selectChagne"
-                    highlight-current-row style="width: 100%" :height="tableHeight">
+                       highlight-current-row style="width: 100%;height:100%;" >
                 <el-table-column type="index" width="50"></el-table-column>
                 <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column property="date"  label="日期" width="120">
+                <el-table-column property="date"  label="日期" min-width="120">
                 </el-table-column>
-                <el-table-column property="name" label="姓名" width="120">
+                <el-table-column property="name" label="姓名" min-width="120">
                 </el-table-column>
                 <el-table-column property="address" label="地址">
                 </el-table-column>
@@ -31,8 +46,8 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <el-pagination background layout="sizes, prev, pager, next, total" :total="1000"></el-pagination>
-        </el-card>
+            <el-pagination background layout="sizes, prev, pager, next, total" :total="1000" style="text-align: right;"></el-pagination>
+        </div>
         <el-dialog title="删除提示" :visible.sync="deleteModal"
                     width="30%" >
                 <h2>是否删除该记录！</h2>

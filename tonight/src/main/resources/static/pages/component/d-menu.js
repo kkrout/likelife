@@ -1,6 +1,6 @@
 Vue.component('d-sub-menu',{
     template:`
-        <el-submenu v-if="item.children && item.children.length" >
+        <el-submenu :index="item.menuId" v-if="item.children && item.children.length" >
             <template slot="title">
                 <i v-if="item.iconCls" :class="item.iconCls"></i>
                 <span slot="title" v-text="item.name" ></span>
@@ -23,7 +23,7 @@ Vue.component('d-sub-menu',{
 
 Vue.component('d-subclose-menu',{
     template:`
-        <el-dropdown v-if="item.children && item.children.length" placement="left" >
+        <el-dropdown  v-if="item.children && item.children.length" placement="left" @command="$emit('command',$event)" >
             <el-dropdown-item :command="item.menuId" >
                 <i v-if="item.iconCls" :class="item.iconCls"></i>
                  <span v-text="item.name"></span>
@@ -43,12 +43,12 @@ Vue.component('d-subclose-menu',{
 
 Vue.component('d-close-menu',{
     template:`
-        <el-dropdown size="medium" v-if="item.children && item.children.length" placement="left" >
+        <el-dropdown size="medium" v-if="item.children && item.children.length" placement="left" @command="$emit('command',$event)" >
             <el-menu-item :index="item.menuId" >
                 <i v-if="item.iconCls" :class="item.iconCls"></i>
             </el-menu-item>
             <el-dropdown-menu slot="dropdown">
-                <d-subclose-menu v-for="sub in item.children" :item="sub" ></d-subclose-menu>
+                <d-subclose-menu v-for="sub in item.children" :item="sub" @command="$emit('command',$event)" ></d-subclose-menu>
              </el-dropdown-menu>
         </el-dropdown>
         <el-tooltip v-else class="item" effect="dark" :content="item.name" placement="left">
@@ -68,11 +68,11 @@ Vue.component('d-close-menu',{
 Vue.component('d-menu',{
     template:`
         <div style="height: 100%">
-            <el-menu :index="value"  @select="menuSelect" style="height: calc(100% - 30px)"
+            <el-menu :default-active="value"  @select="menuSelect" style="height: calc(100% - 30px)"
                      background-color="#383e4b" text-color="#fff"
                      active-text-color="rgba(19,194,194,0.66)"  >
                 <template  v-if="closed" >
-                    <d-close-menu :item="item" v-for="item in list" ></d-close-menu>
+                    <d-close-menu :item="item" v-for="item in list" @command="menuSelect" ></d-close-menu>
                 </template>
                 <template  v-else >
                     <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
@@ -103,7 +103,7 @@ Vue.component('d-menu',{
     },
     methods:{
         menuSelect(v){
-            console.log(v)
+            this.$emit('select',v);
         },
         onClospend(b){
             this.closed=b;
