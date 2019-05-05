@@ -113,6 +113,9 @@ Vue.component('ue',{
     methods: {
         getUEContent() { // 获取内容方法
             return this.editor.getContent()
+        },
+        getUEContentTxt() { // 获取纯文本方法
+            return this.editor.getContentTxt()
         }
     },
     destroyed() {
