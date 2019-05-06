@@ -10,6 +10,7 @@ function NavTag(menu) {
         this.url = menu.url || "";
         this.iconCls = menu.iconCls || "";
         this.data = menu.data || null;
+        this.diy = menu.diy || null;
     }
     this.id = App.convertToComp(this.url)
 }
@@ -120,28 +121,39 @@ Vue.component('d-tag-nav', {
             window.location.hash = url;
             //请求前将页面搞空
             this.$root.componentId = "d-page-loading";
-            App.request({
-                dataType: "text",
-                url: pageContextPath + url,
-                success: res => {
-                    var wrap = $("<div></div>").html(res);
-                    var title = wrap.children('title').text();
-                    if (this.currentTag && this.currentTag.name == "    ") {
-                        this.currentTag.name = title;
+
+            if ( this.currentTag.diy != 1) {
+                App.request({
+                    dataType: "text",
+                    url: pageContextPath + url,
+                    success: res => {
+                        var wrap = $("<div></div>").html(res);
+                        var title = wrap.children('title').text();
+                        if (this.currentTag && this.currentTag.name == "    ") {
+                            this.currentTag.name = title;
+                        }
+                        var template = wrap.children('template');
+                        var compId = this.currentTag.id;
+                        App.mouleTemplate[compId] = template.html();
+                        var that = this;
+                        App.mouleTemplateCallback[compId] = function (v) {
+                            that.$emit('on-switch', that.currentTag);
+                        }
+                        template.remove();
+                        wrap.appendTo('body');
                     }
-                    var template = wrap.children('template');
-                    var compId = this.currentTag.id;
-                    App.mouleTemplate[compId] = template.html();
-                    var that = this;
-                    App.mouleTemplateCallback[compId] = function (v) {
-                        that.$emit('on-switch', that.currentTag);
-                    }
-                    template.remove();
-                    wrap.appendTo('body');
-                }
-            }).callError(res => {
-                //App.MainVueApp.componentId = "page-error";
-            }).hideLoad();
+                }).callError(res => {
+                    //App.MainVueApp.componentId = "page-error";
+                }).hideLoad();
+            }else{
+                var menu = this.$root.getMenuById(this.currentTag.menuId);
+                var moudle;
+                eval("moudle="+menu.script);
+                moudle.template = menu.template;
+                Vue.component(this.currentTag.id,moudle);
+                this.$emit('on-switch', this.currentTag);
+            }
+
         },
         onTagClick(tag,evt){
             var target = evt.target || evt.srcElement;

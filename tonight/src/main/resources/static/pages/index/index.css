@@ -10,7 +10,7 @@ html,body{
 .main{
     height: 100%;
 }
-.main section{
+.main>.main-container{
     height: 100%;
 }
 .main-aside{
@@ -102,6 +102,6 @@ html,body{
 .main-content{
     padding:10px;
     background: white;
-    height:calc(100% - 40px);
+    height:calc(100vh - 50px);
     position: relative;
 }

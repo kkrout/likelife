@@ -29,7 +29,7 @@ App.start({
     },
     mounted() {
         App.request("/api/system/menu/list").callSuccess( res =>{
-            this.menuList = res.data;
+            this.menuList = [new NavTag('#1', '首页', '#home/home.html','iconfont icon-home')].concat(res.data);
             this.$refs.tagNav.initNav();
         })
     },
@@ -73,6 +73,9 @@ App.start({
             var menu = $.extend({},this.currentMenu)
             menu.name = name;
             menu.url = url;
+            menu.diy = null;
+            menu.template = "";
+            menu.script = "";
             menu.data = data;
 
             this.$refs.tagNav.openTag(menu);

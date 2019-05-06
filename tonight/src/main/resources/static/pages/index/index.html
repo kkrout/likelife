@@ -23,14 +23,18 @@
     <link rel="stylesheet" type="text/css" href="plugin/element/styles/fonts/iconfont.css" />
     <script type="text/javascript" src="plugin/perfect-scrollbar/perfect-scrollbar.min.js"></script>
     <link rel="stylesheet" type="text/css" href="plugin/perfect-scrollbar/perfect-scrollbar.css"/>
+    <link rel="stylesheet" href="plugin/codemirror/codemirror.min.css">
+    <script src="plugin/codemirror/codemirror.min.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.2.0/mode/xml/xml.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.2.0/mode/javascript/javascript.min.js"></script>
 </head>
 
 <body >
     <div id="app" class="main" >
-        <el-container >
+        <el-container class="main-container">
             <el-aside :width="menuWidth" class="main-aside" >
-                <div style="text-align: center;padding:10px 0px;">
-                   <img src="nghttps://gw.alicdn.com/tps/TB1W_X6OXXXXXcZXVXXXXXXXXXX-400-400.p" height="40px">
+                <div style="text-align: center;padding:10px 0px;color:white;font-weight: 700;height: 40px;font-style: italic;font-size:24px;">
+                    My Life
                 </div>
                 <!-- 菜单 -->
                 <d-menu ref="menu" :value="activeMenuId" :list="menuList" @close="closeMenu" @select="menuSelect" ></d-menu>

@@ -33,7 +33,25 @@
                         <el-form-item label="排序:">
                             <el-input-number v-model="menuForm.sort"></el-input-number>
                         </el-form-item>
+                        <el-form-item label="是否动态html:">
+                            <el-radio-group v-model="menuForm.diy" @change="changeDiy" >
+                                <el-radio :label="0">否</el-radio>
+                                <el-radio :label="1">是</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
                     </el-form>
+                    <el-row :gutter="10" v-if="menuForm.diy == 1" >
+                        <el-col :span="12">
+                            <el-card>
+                                <textarea ref="htmlCode" ></textarea>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-card>
+                                <textarea ref="jsCode" ></textarea>
+                            </el-card>
+                        </el-col>
+                    </el-row>
                 </el-main>
             </el-container>
         </el-main>
@@ -50,7 +68,9 @@
                         label:"name",
                     },
                     menuForm:{},
-                    expendList:[]
+                    expendList:[],
+                    htmlEditor:null,
+                    jsEditor:null
                 }
             },
             mounted(){
@@ -80,8 +100,17 @@
                 },
                 nodeClick(node){
                     this.menuForm = node;
+                    this.$nextTick(()=>{
+                        this.changeDiy(this.menuForm.diy)
+                    })
                 },
                 saveItem(){
+                    if ( this.menuForm.diy == 1){
+                        var html = this.htmlEditor.getValue();
+                        var js = this.jsEditor.getValue();
+                        this.menuForm.template = html;
+                        this.menuForm.script = js;
+                    }
                     //保存子项
                     if ( !this.menuForm.menuId ){
                         App.post("/api/system/menu/add/"+this.menuForm.parentId).setData(this.menuForm).callSuccess( res =>{
@@ -107,6 +136,32 @@
                         this.menuForm = {}
                         this.loadMenu();
                     })
+                },
+                changeDiy(v){
+                    if ( v != 1) return;
+
+                    var node = this.menuForm;
+                    var htmlCode = this.$refs.htmlCode;
+                    this.htmlEditor = CodeMirror.fromTextArea(htmlCode, {
+                        mode: "text/html"
+                    });
+                    var jsCode = this.$refs.jsCode;
+                    this.jsEditor = CodeMirror.fromTextArea(jsCode, {
+                        mode: "text/javascript"
+                    });
+
+                    //设置动态内容
+                    this.htmlEditor.setValue(node.template);
+                    this.jsEditor.setValue(node.script);
+
+                    var html = this.htmlEditor.getValue();
+                    var js = this.jsEditor.getValue();
+                    if ( App.isEmpty(html) ){
+                        this.htmlEditor.setValue("<template>\n\n</template>");
+                    }
+                    if ( App.isEmpty(js) ){
+                        this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
+                    }
                 }
             }
         });

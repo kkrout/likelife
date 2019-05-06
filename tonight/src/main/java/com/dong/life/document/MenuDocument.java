@@ -29,6 +29,12 @@ public class MenuDocument implements Comparable<MenuDocument> {
 
     private int sort;
 
+    private int diy;
+
+    private String template;
+
+    private String script;
+
     @DBRef
     private List<MenuDocument> children;
 
