@@ -68,15 +68,10 @@ Vue.component('d-close-menu',{
 Vue.component('d-menu',{
     template:`
         <div style="height: 100%">
-            <el-menu :default-active="value"  @select="menuSelect" style="height: calc(100% - 30px)"
+            <el-menu :collapse="closed" :default-active="value"  @select="menuSelect" style="height: calc(100% - 30px)"
                      background-color="#383e4b" text-color="#fff"
                      active-text-color="rgba(19,194,194,0.66)"  >
-                <template  v-if="closed" >
-                    <d-close-menu :item="item" v-for="item in list" @command="menuSelect" ></d-close-menu>
-                </template>
-                <template  v-else >
-                    <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
-                </template>
+                <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
             </el-menu>
             <div class="close-menu" >
                <div>

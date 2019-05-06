@@ -15,11 +15,17 @@ html,body{
 .main aside{
     overflow: visible;
     height: 100%;
+    background:rgb(56, 62, 75);
+    transition: width .5s;
+    -moz-transition: width .5s;	/* Firefox 4 */
+    -webkit-transition: width .5s;	/* Safari 和 Chrome */
+    -o-transition: width .5s;	/* Opera */
 }
 .el-menu{
     height: 100%;
     border-right: none;
 }
+
 .el-main{
     padding:10px;
 }

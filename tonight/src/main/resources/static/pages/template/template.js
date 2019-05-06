@@ -47,18 +47,14 @@
                 });
             },
             edit(row){
-                //传递数据
-                App.putData("editData",row);
-                App.openModule("detail","信息编辑","template/detail.html");
+                App.openModule("信息编辑","template/detail.html?edit",row);
             },
             del(row){
                 this.$set(this,'selectionData',[row]);
                 this.deleteModal = true;
             },
             create(){
-                //传递数据
-                App.putData("editType","new");
-                App.openModule("detail","信息创建","template/detail.html");
+                App.openModule("信息创建","template/detail.html?new");
             }
         },
         /* 组件创建完成事件  */

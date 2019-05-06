@@ -643,13 +643,8 @@ var App = (function ($) {
      * @param url 模块url
      * @param name 模块名称
      */
-    app.openModule = function (moudelFlag, name, url) {
-        var mainApp = this.MainVueApp;
-        var activityId = mainApp.activeMenuId;
-        //最原始的menuId
-        var menuId = activityId.split('@')[0];
-        var tabNav = new NavObject(menuId + "@" + moudelFlag, "#" + url, name);
-        mainApp.addSubPageTag(tabNav);
+    app.openModule = function (name, url,data) {
+        this.MainVueApp.openFromCurrentMenu(name, "#"+url,data);
     }
 
     /**

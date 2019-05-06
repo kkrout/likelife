@@ -9,6 +9,9 @@ Vue.mixin({
         this.$getPath = function (url) {
             return App.getPath(url);
         }
+        this.$getCurrentTag = function(){
+            return App.MainVueApp.$refs.tagNav.getCurrentTag();
+        }
     }
 });
 
@@ -30,16 +33,16 @@ App.start({
                     "componentId": "admin-home"
                 },
                 {
-                    "menuId": "3",
-                    "name": "多级菜单",
+                    "menuId": "2",
+                    "name": "我的演示",
                     "iconCls": "iconfont icon-yanshi",
                     "children": [{
-                            "menuId": "3-1",
-                            "name": "二级菜单1",
+                            "menuId": "3",
+                            "name": "基本演示",
                             "iconCls": "iconfont icon-yanshi",
                             "children":[
                                 {
-                                    "menuId": "3-1-1",
+                                    "menuId": "4",
                                     "name": "演示",
                                     "url": "#template/template.html",
                                     "iconCls": "iconfont icon-yanshi"
@@ -89,6 +92,14 @@ App.start({
                 this.currentMenu = menu;
             }
         },
+        openFromCurrentMenu(name,url,data){
+            var menu = $.extend({},this.currentMenu)
+            menu.name = name;
+            menu.url = url;
+            menu.data = data;
+
+            this.$refs.tagNav.openTag(menu);
+        },
         switchComp(tag){
             this.componentId = tag.id;
             this.activeMenuId = tag.menuId;
@@ -96,7 +107,7 @@ App.start({
         },
         closeMenu(b) {
             if (b) {
-                this.menuWidth = "60px";
+                this.menuWidth = "64px";
             } else {
                 this.menuWidth = "200px";
             }

@@ -7,9 +7,10 @@
                 tabStyle:{}
             }
         },
-        activated(){
+        mounted(){
+            var tag = this.$getCurrentTag();
             //接收数据
-            var editData = App.getData('editData');
+            var editData = tag.data;
             App.success("接收传过来的数据为："+JSON.stringify(editData));
             this.$nextTick(()=>{
                 this.$set(this.tabStyle,'height',(App.MainVueApp.pageHeight - 150)+"px")

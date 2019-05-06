@@ -1,5 +1,5 @@
 function NavTag(menu) {
-    if (arguments.length == 3) {
+    if (arguments.length > 1) {
         this.menuId = arguments[0] || "";
         this.name = arguments[1] || "";
         this.url = arguments[2] || "";
@@ -9,6 +9,7 @@ function NavTag(menu) {
         this.name = menu.name || "";
         this.url = menu.url || "";
         this.iconCls = menu.iconCls || "";
+        this.data = menu.data || null;
     }
     this.id = App.convertToComp(this.url)
 }
@@ -19,11 +20,11 @@ Vue.component('d-tag-nav', {
         <div class="tag-nav-wrapper">
             <div class="tag-nav-body">
                <div :class="{'tag-nav':true,'tag-nav-active': item == currentTag }" @mouseover="hoverTag=item" @mouseout="hoverTag=null"
-                    v-for="item in tagList" @click="onTagClick(item)">
+                    v-for="item in tagList" @click="onTagClick(item,$event)">
                     <i :class="item.iconCls" v-if="item.iconCls" ></i>
                     <span v-text="item.name" ></span>
                     <div class="tag-nav-bar" v-if="item == currentTag" ></div>
-                    <i v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:5px;right:2px;font-size: 12px;"></i>
+                    <i @click="closeTag(item)" v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:5px;right:2px;font-size: 12px;"></i>
                </div>   
             </div>
         </div>
@@ -53,7 +54,7 @@ Vue.component('d-tag-nav', {
             tagList: [],
             hoverTag:null,
             currentTag: null,
-            homeNav: new NavTag('#1', '首页', '#home/home.html')
+            homeNav: new NavTag('#1', '首页', '#home/home.html','iconfont icon-home')
         }
     },
     watch: {
@@ -63,6 +64,7 @@ Vue.component('d-tag-nav', {
                 if (!Vue.component(compId)) {
                     this.loadMoule()
                 } else {
+                    window.location.hash = n.url;
                     this.$emit('on-switch', n);
                 }
             }
@@ -106,6 +108,14 @@ Vue.component('d-tag-nav', {
 
             return tag;
         },
+        closeTag(item){
+            var index = this.tagList.indexOf(item);
+            this.$delete(this.tagList,index);
+            this.$root.$delete(this.$root.cacheList,index);
+            this.allTagsMap.delete(item.id);
+            if ( this.currentTag == item )
+                this.currentTag = this.tagList[index--] || this.tagList[index++] || this.tagList[0];
+        },
         loadMoule() {
             var url = this.currentTag.url;
             if ( url.indexOf("#") == 0){
@@ -137,8 +147,14 @@ Vue.component('d-tag-nav', {
                 //App.MainVueApp.componentId = "page-error";
             }).hideLoad();
         },
-        onTagClick(tag){
+        onTagClick(tag,evt){
+            var target = evt.target || evt.srcElement;
+            if ( target.tagName == 'I')
+                return;
             this.currentTag = tag;
+        },
+        getCurrentTag(){
+            return this.currentTag;
         }
     }
 
