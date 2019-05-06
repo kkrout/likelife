@@ -44,10 +44,6 @@ Vue.component('d-tag-nav', {
         this.tagList.push(this.homeNav);
         this.allTagsMap.set(this.homeNav.id, this.homeNav);
     },
-    mounted() {
-        //监控hash
-        this.initNav();
-    },
     data() {
         return {
             allTagsMap: new Map(),

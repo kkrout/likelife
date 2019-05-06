@@ -24,37 +24,14 @@ App.start({
             componentId:"",
             cacheList:[],
             currentMenu:null,
-            menuList: [
-                {
-                    "menuId": "#1",
-                    "name": "首页",
-                    "url": "#home/home.html",
-                    "iconCls": "iconfont icon-home",
-                    "componentId": "admin-home"
-                },
-                {
-                    "menuId": "2",
-                    "name": "我的演示",
-                    "iconCls": "iconfont icon-yanshi",
-                    "children": [{
-                            "menuId": "3",
-                            "name": "基本演示",
-                            "iconCls": "iconfont icon-yanshi",
-                            "children":[
-                                {
-                                    "menuId": "4",
-                                    "name": "演示",
-                                    "url": "#template/template.html",
-                                    "iconCls": "iconfont icon-yanshi"
-                                }
-                            ]
-                        }]
-                }
-            ]
+            menuList: []
         }
     },
     mounted() {
-
+        App.request("/api/system/menu/list").callSuccess( res =>{
+            this.menuList = res.data;
+            this.$refs.tagNav.initNav();
+        })
     },
     methods: {
         getMenuByComp(compId,menuList){
@@ -63,7 +40,7 @@ App.start({
             for(var i=0,item;item=list[i++];){
 
                 var compId1 = App.convertToComp(item.url);
-                if ( compId1 == compId2){
+                if ( compId1 == compId2 && (!item.children || !item.children.length)){
                     return item;
                 }
                 var find = item.children && item.children.length && this.getMenuByComp(compId,item.children);
@@ -101,9 +78,10 @@ App.start({
             this.$refs.tagNav.openTag(menu);
         },
         switchComp(tag){
+            console.log(tag)
             this.componentId = tag.id;
             this.activeMenuId = tag.menuId;
-            this.currentMenu = tag;
+            this.currentMenu = this.getMenuById(tag.menuId);
         },
         closeMenu(b) {
             if (b) {

@@ -147,16 +147,22 @@ var App = (function ($) {
     //显示loadding蒙层
     app.showLoadding = function (message, timeout, ajax) {
         try {
-            this.currentLoading && this.currentLoading();
-            this.currentLoading = this.MainVueApp.$Message.loading({
-                content: message || '加载中...',
-                duration: timeout || 60,
-                closable: ajax ? true : false,
-                onClose: function () {
-                    //结束请求
-                    ajax && ajax.abort && ajax.abort();
-                }
-            })
+            this.currentLoading && this.currentLoading.close();
+            this.currentLoading = this.MainVueApp.$loading({
+                lock: true,
+                text: message || '加载中...',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.7)'
+            });
+            // this.currentLoading = this.MainVueApp.$Message.loading({
+            //     content: message || '加载中...',
+            //     duration: timeout || 60,
+            //     closable: ajax ? true : false,
+            //     onClose: function () {
+            //         //结束请求
+            //         ajax && ajax.abort && ajax.abort();
+            //     }
+            // })
         } catch (e) {
             console.log('显示loading错误' + e)
         }
@@ -164,7 +170,7 @@ var App = (function ($) {
     //隐藏蒙层
     app.hideLoading = function () {
         try {
-            this.currentLoading && this.currentLoading();
+            this.currentLoading && this.currentLoading.close();
         } catch (e) {
             console.log('隐藏loading错误' + e)
         }

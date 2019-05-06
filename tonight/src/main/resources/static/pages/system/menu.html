@@ -1,0 +1,115 @@
+<title>菜单管理</title>
+<template>
+    <el-container>
+        <el-aside>
+            <el-tree ref="tree" highlight-current :data="treeData" node-key="menuId" :default-expanded-keys="expendList"
+                     :expand-on-click-node="false" :props="propsConfig" :props="defaultProps" @current-change="nodeClick" >
+                <div style="width: 100%;" slot-scope="{ node, data }">
+                    <i :class="data.iconCls" v-if="data.iconCls"></i>
+                    <span>{{ node.label }}</span>
+                </div>
+            </el-tree>
+        </el-aside>
+        <el-main>
+            <el-container>
+                <el-header >
+                    <el-button-group>
+                        <el-button :disabled="!canAdd" size="mini" type="primary" icon="el-icon-push" @click="newItem" >新增子菜单</el-button>
+                        <el-button :disabled="!canSave" size="mini" type="primary" icon="el-icon-check" @click="saveItem" >保存</el-button>
+                        <el-button :disabled="!canAdd" size="mini" type="danger" icon="el-icon-delete" @click="removeItem" >删除</el-button>
+                    </el-button-group>
+                </el-header>
+                <el-main >
+                    <el-form size="mini" label-width="100px" >
+                        <el-form-item label="菜单名称:" >
+                            <el-input v-model="menuForm.name"></el-input>
+                        </el-form-item>
+                        <el-form-item label="路径:">
+                            <el-input v-model="menuForm.url"></el-input>
+                        </el-form-item>
+                        <el-form-item label="图标:">
+                            <el-input v-model="menuForm.iconCls"></el-input>
+                        </el-form-item>
+                        <el-form-item label="排序:">
+                            <el-input-number v-model="menuForm.sort"></el-input-number>
+                        </el-form-item>
+                    </el-form>
+                </el-main>
+            </el-container>
+        </el-main>
+    </el-container>
+</template>
+<script>
+    (()=>{
+
+        App.moule({
+            data(){
+                return {
+                    treeData:[],
+                    propsConfig:{
+                        label:"name",
+                    },
+                    menuForm:{},
+                    expendList:[]
+                }
+            },
+            mounted(){
+                this.loadMenu();
+            },
+            computed:{
+                canAdd(){
+                    return this.menuForm && this.menuForm.menuId;
+                },
+                canSave(){
+                    return this.menuForm && this.menuForm.name;
+                }
+            },
+            methods:{
+                loadMenu(expend){
+                    expend = expend || "-1";
+                    App.request("/api/system/menu/list").callSuccess( res =>{
+                        var root = [{
+                            name:"菜单列表",
+                            children:res.data,
+                            menuId:"-1",
+                            expend:true
+                        }]
+                        this.expendList = [expend]
+                        this.treeData = root;
+                    })
+                },
+                nodeClick(node){
+                    this.menuForm = node;
+                },
+                saveItem(){
+                    //保存子项
+                    if ( !this.menuForm.menuId ){
+                        App.post("/api/system/menu/add/"+this.menuForm.parentId).setData(this.menuForm).callSuccess( res =>{
+                            this.menuForm = {};
+                            this.loadMenu(this.menuForm.parentId);
+                        })
+                    }else{
+                        //修改菜单
+                        App.post("/api/system/menu/save").setData(this.menuForm).callSuccess( res =>{
+                            // this.loadMenu(this.menuForm.menuId);
+                        })
+                    }
+                },
+                newItem(){
+                    if ( this.menuForm.menuId ){
+                        var newForm = {parentId:this.menuForm.menuId};
+                        this.menuForm = newForm;
+                    }
+                },
+                removeItem(){
+                    //删除菜单
+                    App.post("/api/system/menu/remove/"+this.menuForm.menuId).callSuccess( res =>{
+                        this.menuForm = {}
+                        this.loadMenu();
+                    })
+                }
+            }
+        });
+
+    })();
+</script>
