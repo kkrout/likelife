@@ -38,6 +38,7 @@
                                 <el-radio :label="0">否</el-radio>
                                 <el-radio :label="1">是</el-radio>
                             </el-radio-group>
+                            <el-button v-if="menuForm.diy == 1" @click="fullScreen" >全屏编辑</el-button>
                         </el-form-item>
                     </el-form>
                     <el-row :gutter="10" v-if="menuForm.diy == 1" >
@@ -51,12 +52,31 @@
                                 <textarea ref="jsCode" ></textarea>
                             </el-card>
                         </el-col>
+                        <el-dialog title="动态内容" :visible.sync="diyDialog" fullscreen >
+                            <el-row :gutter="10" >
+                                <el-col :span="12">
+                                    <el-card :body-style="{height:'77vh'}" class="full-card-code" >
+                                        <textarea ref="htmlCode1"></textarea>
+                                    </el-card>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-card :body-style="{height:'77vh'}" class="full-card-code" >
+                                        <textarea ref="jsCode1" ></textarea>
+                                    </el-card>
+                                </el-col>
+                            </el-row>
+                        </el-dialog>
                     </el-row>
                 </el-main>
             </el-container>
         </el-main>
     </el-container>
 </template>
+<style>
+    .full-card-code .CodeMirror{
+        height: auto    ;
+    }
+</style>
 <script>
     (()=>{
 
@@ -70,7 +90,8 @@
                     menuForm:{},
                     expendList:[],
                     htmlEditor:null,
-                    jsEditor:null
+                    jsEditor:null,
+                    diyDialog:false
                 }
             },
             mounted(){
@@ -99,9 +120,12 @@
                     })
                 },
                 nodeClick(node){
-                    this.menuForm = node;
+                    this.menuForm = {};
                     this.$nextTick(()=>{
-                        this.changeDiy(this.menuForm.diy)
+                        this.menuForm = node;
+                        this.$nextTick(()=>{
+                            this.changeDiy(this.menuForm.diy)
+                        })
                     })
                 },
                 saveItem(){
@@ -143,11 +167,11 @@
                     var node = this.menuForm;
                     var htmlCode = this.$refs.htmlCode;
                     this.htmlEditor = CodeMirror.fromTextArea(htmlCode, {
-                        mode: "text/html"
+                        mode: "text/html",height:"200px"
                     });
                     var jsCode = this.$refs.jsCode;
                     this.jsEditor = CodeMirror.fromTextArea(jsCode, {
-                        mode: "text/javascript"
+                        mode: "text/javascript",height:"200px"
                     });
 
                     //设置动态内容
@@ -162,6 +186,33 @@
                     if ( App.isEmpty(js) ){
                         this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
                     }
+                },
+                fullScreen(){
+                    this.diyDialog = true;
+                    this.$nextTick(()=>{
+                        var node = this.menuForm;
+                        var htmlCode = this.$refs.htmlCode1;
+                        this.htmlEditor = CodeMirror.fromTextArea(htmlCode, {
+                            mode: "text/html",height:"auto"
+                        });
+                        var jsCode = this.$refs.jsCode1;
+                        this.jsEditor = CodeMirror.fromTextArea(jsCode, {
+                            mode: "text/javascript",class:"auto"
+                        });
+
+                        //设置动态内容
+                        this.htmlEditor.setValue(node.template);
+                        this.jsEditor.setValue(node.script);
+
+                        var html = this.htmlEditor.getValue();
+                        var js = this.jsEditor.getValue();
+                        if ( App.isEmpty(html) ){
+                            this.htmlEditor.setValue("<template>\n\n</template>");
+                        }
+                        if ( App.isEmpty(js) ){
+                            this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
+                        }
+                    })
                 }
             }
         });
