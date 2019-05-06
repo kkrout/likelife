@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("MenuDocument")
-public class MenuDocument {
+public class MenuDocument implements Comparable<MenuDocument> {
 
     @Id
     private String menuId;
@@ -38,4 +38,8 @@ public class MenuDocument {
         this.iconCls=iconCls;
     }
 
+    @Override
+    public int compareTo(MenuDocument o) {
+        return o.getSort() - this.getSort();
+    }
 }

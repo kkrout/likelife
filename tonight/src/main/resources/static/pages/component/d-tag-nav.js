@@ -24,7 +24,7 @@ Vue.component('d-tag-nav', {
                     <i :class="item.iconCls" v-if="item.iconCls" ></i>
                     <span v-text="item.name" ></span>
                     <div class="tag-nav-bar" v-if="item == currentTag" ></div>
-                    <i @click="closeTag(item)" v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:5px;right:2px;font-size: 12px;"></i>
+                    <i @click="closeTag(item)" v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:14px;right:2px;font-size: 12px;"></i>
                </div>   
             </div>
         </div>

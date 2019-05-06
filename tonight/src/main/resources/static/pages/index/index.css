@@ -16,7 +16,7 @@ html,body{
 .main-aside{
     overflow: visible;
     height: 100%;
-    background:rgb(56, 62, 75);
+    background:#090723;
     transition: width .5s;
     -moz-transition: width .5s;	/* Firefox 4 */
     -webkit-transition: width .5s;	/* Safari 和 Chrome */
@@ -31,7 +31,6 @@ html,body{
     padding:10px;
 }
 .close-menu{
-    background: rgb(56, 62, 75);
     color: white;
     bottom: 0px;
     cursor: pointer;

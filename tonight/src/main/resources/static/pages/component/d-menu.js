@@ -69,8 +69,8 @@ Vue.component('d-menu',{
     template:`
         <div style="height: 100%">
             <el-menu :unique-opened="true" :collapse="closed" :default-active="value"  @select="menuSelect" style="height: calc(100% - 30px)"
-                     background-color="#383e4b" text-color="#fff"
-                     active-text-color="rgba(19,194,194,0.66)"  >
+                     background-color="#090723" text-color="#fff"
+                     active-text-color="#409EFF"  >
                 <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
             </el-menu>
             <div class="close-menu" >
