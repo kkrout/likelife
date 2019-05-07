@@ -90,7 +90,9 @@ Vue.component('d-tag-nav', {
             this.currentTag = tag;
         },
         addNavTag(menu) {
+            console.log(menu);
             var m = typeof menu == "string" ? this.$root.getMenuByComp(menu) : menu;
+            console.log(m);
             //建立临时tag
             var tag;
             if ( !m ){
@@ -130,7 +132,7 @@ Vue.component('d-tag-nav', {
                         var wrap = $("<div></div>").html(res);
                         var title = wrap.children('title').text();
                         if (this.currentTag && this.currentTag.name == "    ") {
-                            this.currentTag.name = title;
+                            this.currentTag.name = title || "无标题";
                         }
                         var template = wrap.children('template');
                         var compId = this.currentTag.id;

@@ -67,12 +67,14 @@ Vue.component('d-close-menu',{
 
 Vue.component('d-menu',{
     template:`
-        <div style="height: calc(100% - 100px)" >
-            <el-menu :unique-opened="true" :collapse="closed" :default-active="value"  @select="menuSelect" 
-                     background-color="#090723" text-color="#fff"
-                     active-text-color="#409EFF"  >
-                <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
-            </el-menu>
+        <div style="height: calc(100% - 60px)" >
+            <div style="height: calc(100% - 30px);overflow: hidden;position: relative;" v-scroll >
+                <el-menu :unique-opened="true" :collapse="closed" :default-active="value"  @select="menuSelect" 
+                         background-color="#090723" text-color="#fff"
+                         active-text-color="#409EFF"  >
+                    <d-sub-menu :item="item" v-for="item in list" ></d-sub-menu>
+                </el-menu>
+            </div>
             <div class="close-menu" >
                <div>
                    <i class="el-icon-d-arrow-left" v-if="!closed" @click="onClospend(true)" ></i>

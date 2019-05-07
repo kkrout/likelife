@@ -105,3 +105,13 @@ html,body{
     height:calc(100vh - 50px);
     position: relative;
 }
+.el-input--small .el-input__inner{
+    height: 25px;
+    line-height: 25px;
+}
+.el-input--small .el-input__icon{
+    line-height: 22px;
+}
+.el-input-number--small{
+    line-height: 22px;
+}

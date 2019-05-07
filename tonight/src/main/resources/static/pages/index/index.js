@@ -15,6 +15,8 @@ Vue.mixin({
     }
 });
 
+Vue.use(ELEMENT,{size:"small"})
+
 App.start({
     el: '#app',
     data: function () {
@@ -24,43 +26,37 @@ App.start({
             componentId:"",
             cacheList:[],
             currentMenu:null,
-            menuList: []
+            menuList: [],
+            menuIndexMap:new Map(),
+            menuCompIndexMap:new Map()
         }
     },
     mounted() {
         App.request("/api/system/menu/list").callSuccess( res =>{
             this.menuList = [new NavTag('#1', '首页', '#home/home.html','iconfont icon-home')].concat(res.data);
+            this.createMenuIndex(this.menuList);
             this.$refs.tagNav.initNav();
         })
     },
     methods: {
-        getMenuByComp(compId,menuList){
-            var list = menuList || this.menuList;
-            var compId2 = App.convertToComp(compId);
-            for(var i=0,item;item=list[i++];){
-
-                var compId1 = App.convertToComp(item.url);
-                if ( compId1 == compId2 && (!item.children || !item.children.length)){
-                    return item;
+        createMenuIndex(list){
+            list.forEach(item => {
+                this.menuIndexMap.set(item.menuId,item);
+                if ( item.children && item.children.length ){
+                    this.createMenuIndex(item.children)
+                }else{
+                    var compId = App.convertToComp(item.url)
+                    //只有叶子节点才能拥有url，父节点不算
+                    this.menuCompIndexMap.set(compId,item);
                 }
-                var find = item.children && item.children.length && this.getMenuByComp(compId,item.children);
-                if ( find ){
-                    return find;
-                }
-            }
+            })
         },
-        getMenuById(menuId,menuList){
-            var list = menuList || this.menuList;
-            for(var i=0,item;item=list[i++];){
-                var menuId_ = item.menuId;
-                if ( menuId_ == menuId){
-                    return item;
-                }
-                var find = item.children && item.children.length && this.getMenuById(menuId,item.children);
-                if ( find ){
-                    return find;
-                }
-            }
+        getMenuByComp(url){
+            var compId = App.convertToComp(url);
+            return this.menuCompIndexMap.get(compId);
+        },
+        getMenuById(menuId){
+            return this.menuIndexMap.get(menuId);
         },
         menuSelect(v){
             var menu = this.getMenuById(v)
