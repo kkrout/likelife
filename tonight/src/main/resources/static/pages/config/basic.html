@@ -1,13 +1,25 @@
 <title>基础功能配置</title>
 <template>
-    <div>
-        <el-table  size="mini" ref="table" :data="tableData" stripe highlight-current-row height="100%" @cell-click="cellClick" >
+    <div style="height: 100%">
+        <el-form  label-width="80px" inline>
+            <el-form-item label="文档标识" >
+                <el-input v-model="document.docName" ></el-input>
+            </el-form-item>
+            <el-form-item label="功能名称">
+                <el-input v-model="document.funcName" ></el-input>
+            </el-form-item>
+        </el-form>
+        <el-button-group>
+            <el-button size="mini" type="primary" icon="el-icon-edit" @click="save" >保存</el-button>
+        </el-button-group>
+        <!--<div class="el-divider el-divider&#45;&#45;horizontal" style="margin:0px;margin-bottom: 12px;"> </div>-->
+        <el-table  size="mini" ref="table" :data="tableData" stripe highlight-current-row height="calc(100% - 60px)" @cell-click="cellClick" >
             <el-table-column type="index" width="50"></el-table-column>
             <el-table-column type="selection" width="55"></el-table-column>
             <el-table-column property="displayName"  label="显示名称" min-width="120" >
                 <template slot-scope="scope" >
                     <el-input v-if="editColumn && scope.column.id == editColumn.id "
-                              v-model="scope.row.displayName" autofocus  v-clickotherside="handerOutSide" ></el-input>
+                              v-model="scope.row.displayName"  v-clickotherside="handerOutSide" ></el-input>
                     <span v-else v-text="scope.row.displayName"></span>
                 </template>
             </el-table-column>
@@ -36,17 +48,22 @@
                     <span v-else v-text="scope.row.defaultValue"></span>
                 </template>
             </el-table-column>
+            <el-table-column property="required" label="非空">
+                <template slot-scope="scope" >
+                    <el-checkbox :true-label="1" :false-label="0" v-model="scope.row.required" ></el-checkbox>
+                </template>
+            </el-table-column>
             <el-table-column property="remark" label="备注">
                 <template slot-scope="scope" >
-                    <el-input v-if="editColumn && scope.column.id == editColumn.id "
-                              v-model="scope.row.remark" autofocus  v-clickotherside="handerOutSide" ></el-input>
+                    <el-input type="textarea" v-if="editColumn && scope.column.id == editColumn.id "
+                              v-model="scope.row.remark"  v-clickotherside="handerOutSide" ></el-input>
                     <span v-else v-text="scope.row.remark"></span>
                 </template>
             </el-table-column>
             <el-table-column property="auto" label="自动生成">
                 <template slot-scope="scope" >
                     <el-select ref="tabSelect" v-if="editColumn && scope.column.id == editColumn.id " v-model="scope.row.auto"
-                               placeholder="请选择类型" @change="handlerAutoSelect(scope,$event)" >
+                               placeholder="请选择类型" @change="handlerAutoSelect(scope,$event)" height="calc(100% - 60px);" >
                         <el-option value="increment" label="自增"></el-option>
                         <el-option value="uuid" label="UUID"></el-option>
                     </el-select>
@@ -68,6 +85,7 @@
     App.moule({
         data :function() {
             return {
+                document:{},
                 tableData: [{
                     filed: 'filed',
                     displayName: '显示名称',
@@ -77,7 +95,7 @@
                     defaultValue:"",
                     remark:"",
                     auto:"",
-                    autoName:""
+                    autoName:"",
                 }],
                 editColumn:null
             }
@@ -101,6 +119,12 @@
                 this.$nextTick(()=>{
                     this.$set(scope.row,'typeName',this.$refs.tabSelect.selectedLabel)
                     this.handerOutSide()
+                })
+            },
+            save(){
+                this.document.items = this.tableData;
+                App.post("/api/config/basicfunc/add").setData(this.document).callSuccess(res=>{
+                    App.success("保存成功");
                 })
             }
         }

@@ -1,0 +1,37 @@
+<template>
+    <div style="height: 100%">
+        <el-table  size="mini" ref="table" :data="tableData"
+                   stripe highlight-current-row height="calc(100% - 60px)" @cell-click="cellClick" >
+            <el-table-column type="index" width="50"></el-table-column>
+            <el-table-column type="selection" width="55"></el-table-column>
+            <el-table-column v-if="item.displayName" :property="item.field"  :label="item.displayName" v-for="item in tableStructs" ></el-table-column>
+        </el-table>
+    </div>
+</template>
+
+<script>
+    App.moule({
+        data(){
+            return {
+                document:null,
+                tableData:[{
+                    "field":"column"
+                },{
+                    "field":"tableData"
+                },{
+                    "field":"document"
+                }],
+                tableStructs:[]
+            };
+        },
+        mounted(){
+            App.request("/api/config/basicfunc/get/5cd2a26879faaa57a0758157").callSuccess(res => {
+                this.document = res.data;
+                this.tableStructs = res.data.items;
+            })
+        },
+        methods:{
+
+        }
+    });
+</script>
