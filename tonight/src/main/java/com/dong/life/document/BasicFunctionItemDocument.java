@@ -11,7 +11,7 @@ public class BasicFunctionItemDocument {
     @Id
     private String id;
 
-    private String filed;
+    private String field;
 
     private String displayName;
 
