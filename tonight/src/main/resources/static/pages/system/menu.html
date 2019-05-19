@@ -33,12 +33,13 @@
                         <el-form-item label="排序:">
                             <el-input-number v-model="menuForm.sort"></el-input-number>
                         </el-form-item>
-                        <el-form-item label="是否动态html:">
-                            <el-radio-group v-model="menuForm.diy" @change="changeDiy" >
-                                <el-radio :label="0">否</el-radio>
-                                <el-radio :label="1">是</el-radio>
-                            </el-radio-group>
+                        <el-form-item label="动态选项:">
+                            <el-checkbox v-model="menuForm.diy" :true-label="1" :false-label="0" @change="changeDiy" >在线编辑</el-checkbox>
+                            <el-checkbox v-model="menuForm.diy" :true-label="2" :false-label="0" @change="changeFunc" >页面配置</el-checkbox>
                             <el-button v-if="menuForm.diy == 1" @click="fullScreen" >全屏编辑</el-button>
+                            <el-select v-model="menuForm.funcId" placeholder="请选择" v-else-if="menuForm.diy == 2" filterable clearable >
+                                <el-option v-for="item in functionList" :label="item.funcName" :value="item.id" :key="item.id" ></el-option>
+                            </el-select>
                         </el-form-item>
                     </el-form>
                     <el-row :gutter="10" v-if="menuForm.diy == 1" >
@@ -91,11 +92,15 @@
                     expendList:[],
                     htmlEditor:null,
                     jsEditor:null,
-                    diyDialog:false
+                    diyDialog:false,
+                    functionList:[]
                 }
             },
             mounted(){
                 this.loadMenu();
+                App.post("/api/config/basicfunc/page/1000/1").setData({}).callSuccess(res=>{
+                    this.functionList = res.data.list;
+                })
             },
             computed:{
                 canAdd(){
@@ -164,28 +169,30 @@
                 changeDiy(v){
                     if ( v != 1) return;
 
-                    var node = this.menuForm;
-                    var htmlCode = this.$refs.htmlCode;
-                    this.htmlEditor = CodeMirror.fromTextArea(htmlCode, {
-                        mode: "text/html",height:"200px"
-                    });
-                    var jsCode = this.$refs.jsCode;
-                    this.jsEditor = CodeMirror.fromTextArea(jsCode, {
-                        mode: "text/javascript",height:"200px"
-                    });
+                    this.$nextTick(()=>{
+                        var node = this.menuForm;
+                        var htmlCode = this.$refs.htmlCode;
+                        this.htmlEditor = CodeMirror.fromTextArea(htmlCode, {
+                            mode: "text/html",height:"200px"
+                        });
+                        var jsCode = this.$refs.jsCode;
+                        this.jsEditor = CodeMirror.fromTextArea(jsCode, {
+                            mode: "text/javascript",height:"200px"
+                        });
 
-                    //设置动态内容
-                    this.htmlEditor.setValue(node.template);
-                    this.jsEditor.setValue(node.script);
+                        //设置动态内容
+                        this.htmlEditor.setValue(node.template);
+                        this.jsEditor.setValue(node.script);
 
-                    var html = this.htmlEditor.getValue();
-                    var js = this.jsEditor.getValue();
-                    if ( App.isEmpty(html) ){
-                        this.htmlEditor.setValue("<template>\n\n</template>");
-                    }
-                    if ( App.isEmpty(js) ){
-                        this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
-                    }
+                        var html = this.htmlEditor.getValue();
+                        var js = this.jsEditor.getValue();
+                        if ( App.isEmpty(html) ){
+                            this.htmlEditor.setValue("<template>\n\n</template>");
+                        }
+                        if ( App.isEmpty(js) ){
+                            this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
+                        }
+                    })
                 },
                 fullScreen(){
                     this.diyDialog = true;
@@ -213,6 +220,11 @@
                             this.jsEditor.setValue("{\n\tdata(){ \n\t\treturn {} \n\t}\n}");
                         }
                     })
+                },
+                changeFunc(v){
+                    if ( v == 2 && this.menuForm.funcId === undefined ){
+                        this.$set(this.menuForm,"funcId","");
+                    }
                 }
             }
         });

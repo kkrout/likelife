@@ -31,6 +31,8 @@ public class MenuDocument implements Comparable<MenuDocument> {
 
     private int diy;
 
+    private String funcId;
+
     private String template;
 
     private String script;

@@ -9,6 +9,7 @@ import com.dong.life.document.MenuDocument;
 import com.mongodb.Block;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -35,14 +36,17 @@ public class BasicFunctionApi {
     @RequestMapping("page/{pageSize}/{pageNum}")
     public JSONObject page(@PathVariable("pageSize") long pageSize, @PathVariable("pageNum") long pageNum, @RequestBody JSONObject param) {
 
-        Criteria a = new Criteria();
-        long count = mongoTemplate.count(new Query(a), BasicFunctionDocument.class);
+        String keyword = param.getString("keyword");
+        Criteria criteria = StringUtils.isNotBlank(keyword) ? Criteria.where("docName").regex(".*" +keyword+ ".*") : new Criteria();
+        long count = mongoTemplate.count(new Query(criteria), BasicFunctionDocument.class);
+
 
         //排除指定字段
         List<AggregationOperation> options = new ArrayList<>();
+        options.add(Aggregation.match(criteria));
         options.add(Aggregation.project().andExclude("items"));
         options.add(Aggregation.skip( (pageNum-1)* pageSize ));
-        options.add(Aggregation.limit(10));
+        options.add(Aggregation.limit(pageSize));
 
         AggregationResults<BasicFunctionDocument> aggregate = mongoTemplate.aggregate(Aggregation .newAggregation(options), BasicFunctionDocument.class,
                 BasicFunctionDocument.class);
@@ -62,27 +66,36 @@ public class BasicFunctionApi {
         return docInfo;
     }
 
-    @RequestMapping("list/{docId}")
-    public List getList(@PathVariable("docId") String docId, @RequestBody JSONObject param) {
+    @RequestMapping("funcPage/{docId}/{pageSize}/{pageNum}")
+    public JSONObject getList(@PathVariable("docId") String docId,@PathVariable("pageSize") long pageSize,
+                        @PathVariable("pageNum") long pageNum, @RequestBody JSONObject param) {
 
         BasicFunctionDocument docInfo = mongoTemplate.findById(docId, BasicFunctionDocument.class);
 
         String docName = docInfo.getDocName();
-        //字段列表
-        Map<String, BasicFunctionItemDocument> structsMap = new HashMap();
-        for (BasicFunctionItemDocument docItem : docInfo.getItems()) {
-            structsMap.put(docItem.getField(), docItem);
-        }
 
-        Set<String> fieldSet = structsMap.keySet();
+        Criteria criteria = new Criteria();
+        long count = mongoTemplate.count(new Query(criteria), Document.class,docName);
 
-        List<Document> all = mongoTemplate.findAll(Document.class, docName);
-        for (Document doc : all) {
+        List<AggregationOperation> options = new ArrayList<>();
+
+        options.add(Aggregation.match(criteria));
+        options.add(Aggregation.skip( (pageNum-1)* pageSize ));
+        options.add(Aggregation.limit(pageSize));
+
+        AggregationResults<Document> aggregate = mongoTemplate.aggregate(Aggregation .newAggregation(options),docName,Document.class);
+        List<Document> mappedResults = aggregate.getMappedResults();
+        for (Document doc : mappedResults) {
             String id = doc.get("_id").toString();
             doc.put("_id", id);
         }
-        return all;
+        JSONObject pageResult = new JSONObject();
+        pageResult.put("total",count);
+        pageResult.put("list",mappedResults);
+
+        return pageResult;
     }
+
 
     @RequestMapping("add")
     public String addBasicFunction(@RequestBody BasicFunctionDocument document) {

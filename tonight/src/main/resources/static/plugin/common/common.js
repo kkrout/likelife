@@ -132,16 +132,8 @@ var App = (function ($) {
         return url;
     },
 
-        app.mouleTemplate = {};
-    app.mouleTemplateCallback = {};
-    app.moule = function (compent) {
-        var compId = this.convertToComp(window.location.hash);
-        compent.template = this.mouleTemplate[compId];
-        var m = Vue.component(compId, compent);
-        this.mouleTemplateCallback[compId] && this.mouleTemplateCallback[compId](compId);
-        delete this.mouleTemplate[compId];
-        delete this.mouleTemplateCallback[compId];
-    }
+    app.component = null;
+    app.moule =  (compent) => { app.component = compent; }
 
     //设置主App应用
     app.setMainApp = function (vue) {
@@ -316,6 +308,7 @@ var App = (function ($) {
                     this.loadArea.$set(this.loadArea, 'loading', true)
                 } else {
                     const app_ = this.modal || app;
+                    console.log('加载中..')
                     this.showLoad && app_.showLoadding(null, null, xhr);
                 }
                 this.beforeCallback && this.beforeCallback.call(this, xhr);

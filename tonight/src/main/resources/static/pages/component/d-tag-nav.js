@@ -124,7 +124,8 @@ Vue.component('d-tag-nav', {
             //请求前将页面搞空
             this.$root.componentId = "d-page-loading";
 
-            if ( this.currentTag.diy != 1) {
+            var compId = this.currentTag.id;
+            Vue.component(compId, function (resolve, reject) {
                 App.request({
                     dataType: "text",
                     url: pageContextPath + url,
@@ -135,18 +136,20 @@ Vue.component('d-tag-nav', {
                             this.currentTag.name = title || "无标题";
                         }
                         var template = wrap.children('template');
-                        var compId = this.currentTag.id;
-                        App.mouleTemplate[compId] = template.html();
-                        var that = this;
-                        App.mouleTemplateCallback[compId] = function (v) {
-                            that.$emit('on-switch', that.currentTag);
-                        }
+                        var templateHtml = template.html();
                         template.remove();
                         wrap.appendTo('body');
+                        App.component.template = templateHtml;
+                        console.log(App.component)
+                        resolve(App.component)
+                        this.$emit('on-switch', that.currentTag);
                     }
                 }).callError(res => {
-                    //App.MainVueApp.componentId = "page-error";
                 }).hideLoad();
+            })
+
+            if ( this.currentTag.diy != 1) {
+
             }else{
                 var menu = this.$root.getMenuById(this.currentTag.menuId);
                 var moudle;
@@ -159,7 +162,7 @@ Vue.component('d-tag-nav', {
         },
         onTagClick(tag,evt){
             var target = evt.target || evt.srcElement;
-            if ( target.tagName == 'I')
+            if ( target.className == "el-icon-close" )
                 return;
             this.currentTag = tag;
         },

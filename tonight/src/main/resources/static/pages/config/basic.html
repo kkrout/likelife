@@ -1,156 +1,215 @@
 <title>基础功能配置</title>
 <template>
     <div style="height: 100%">
-        <el-table  size="mini" ref="table" :data="list" stripe highlight-current-row height="calc(100% - 60px)" >
-            <el-table-column type="index" width="50"></el-table-column>
+        <div style="padding-left:20px;">
+            <el-button-group>
+                <el-button size="mini" type="primary" icon="el-icon-search" @click="queryPage()">查询</el-button>
+                <el-button size="mini" type="primary" icon="el-icon-edit" @click="toAdd()">新增</el-button>
+                <el-button size="mini" type="danger" icon="el-icon-delete" @click="queryPage()">删除</el-button>
+            </el-button-group>
+            <span style="float: right; padding: 3px 0">
+                <el-input v-model="keyword" placeholder="搜索" size="mini" suffix-icon="el-icon-search"
+                          @keyup.enter.native="queryPage()"> </el-input>
+            </span>
+        </div>
+        <el-table @row-dblclick="toEditRow" size="mini" ref="table" :data="list" stripe highlight-current-row
+                  height="calc(100% - 60px)">
             <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column property="docName" label=""></el-table-column>
-        </el-table>
-        <el-pagination background layout="sizes, prev, pager, next, total" :total="total" style="text-align: right;"></el-pagination>
-        <el-form  label-width="80px" inline>
-            <el-form-item label="文档标识" >
-                <el-input v-model="document.docName" :disabled=" document.id " ></el-input>
-            </el-form-item>
-            <el-form-item label="功能名称">
-                <el-input v-model="document.funcName" ></el-input>
-            </el-form-item>
-        </el-form>
-        <el-button-group>
-            <el-button size="mini" type="primary" icon="el-icon-plus" @click="addRow" >新增</el-button>
-            <el-button size="mini" type="primary" icon="el-icon-edit" @click="save" >保存</el-button>
-        </el-button-group>
-        <!--<div class="el-divider el-divider&#45;&#45;horizontal" style="margin:0px;margin-bottom: 12px;"> </div>-->
-        <el-table  size="mini" ref="table" :data="tableData" stripe highlight-current-row height="calc(100% - 60px)" @cell-click="cellClick" >
             <el-table-column type="index" width="50"></el-table-column>
-            <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column property="displayName"  label="显示名称" min-width="120" >
-                <template slot-scope="scope" >
-                    <el-input v-if="activeEditor(scope)"  v-model="scope.row.displayName"  v-clickotherside="handerOutSide" ></el-input>
-                    <span v-else v-text="scope.row.displayName"></span>
-                </template>
-            </el-table-column>
-            <el-table-column property="type" label="类型" min-width="120">
-                <template slot-scope="scope" >
-                    <el-select ref="tabSelect" v-if="activeEditor(scope)"  v-model="scope.row.type"
-                               placeholder="请选择类型" @change="handlerTypeSelect(scope,$event)" >
-                        <el-option :value="key" :label="value" v-for="(value,key) in typeSelect"></el-option>
-                    </el-select>
-                    <span v-else v-text="typeSelect[scope.row.type]"></span>
-                </template>
-            </el-table-column>
-            <el-table-column property="len" label="长度" >
-                <template slot-scope="scope" >
-                    <el-input-number :min="0" v-if="activeEditor(scope)" v-model="scope.row.len" autofocus  v-clickotherside="handerOutSide" ></el-input-number>
-                    <span v-else v-text="scope.row.len || '不限' "></span>
-                </template>
-            </el-table-column>
-            <el-table-column property="defaultValue" label="默认值">
-                <template slot-scope="scope" >
-                    <el-input v-if="activeEditor(scope)" v-model="scope.row.defaultValue" autofocus  v-clickotherside="handerOutSide" ></el-input>
-                    <span v-else v-text="scope.row.defaultValue"></span>
-                </template>
-            </el-table-column>
-            <el-table-column property="required" label="非空">
-                <template slot-scope="scope" >
-                    <el-checkbox :true-label="1" :false-label="0" v-model="scope.row.required" ></el-checkbox>
-                </template>
-            </el-table-column>
-            <el-table-column property="remark" label="备注">
-                <template slot-scope="scope" >
-                    <el-input type="textarea" v-if="activeEditor(scope)"  v-model="scope.row.remark"  v-clickotherside="handerOutSide" ></el-input>
-                    <span v-else v-text="scope.row.remark"></span>
-                </template>
-            </el-table-column>
-            <el-table-column property="auto" label="自动生成">
-                <template slot-scope="scope" >
-                    <el-select ref="tabSelect" v-if="activeEditor(scope)"  placeholder="请选择类型" @change="handlerAutoSelect(scope,$event)" >
-                        <el-option :value="key" :label="value" v-for="(value,key) in autoSelect"></el-option>
-                    </el-select>
-                    <span v-else v-text="autoSelect[scope.row.auto]"></span>
-                </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150">
-                <template slot-scope="scope">
-                    <el-button-group>
-                        <el-button size="mini" type="danger" icon="el-icon-delete" @click="removeRow(scope.$index)" ></el-button>
-                    </el-button-group>
-                </template>
-            </el-table-column>
+            <el-table-column property="docName" label="文档标识"></el-table-column>
+            <el-table-column property="funcName" label="功能名称"></el-table-column>
         </el-table>
+        <el-pagination background layout="sizes, prev, pager, next, total" :total="total" style="text-align: right;"
+                       @size-change="sizeChange"></el-pagination>
+        <el-dialog title="功能明细" :visible.sync="funcDetaiDialog" width="80%" top="8vh">
+            <el-form label-width="80px" inline>
+                <el-form-item label="文档标识">
+                    <el-input v-model="document.docName" :disabled=" document.id "></el-input>
+                </el-form-item>
+                <el-form-item label="功能名称">
+                    <el-input v-model="document.funcName"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-button-group>
+                <el-button size="mini" type="primary" icon="el-icon-plus" @click="addRow">添加列</el-button>
+            </el-button-group>
+            <el-table size="mini" ref="table" :data="document.items" stripe highlight-current-row
+                      height="calc(70vh - 190px)" @cell-click="cellClick">
+                <el-table-column type="index" width="50"></el-table-column>
+                <el-table-column type="selection" width="55"></el-table-column>
+                <el-table-column property="field" label="字段名" min-width="120">
+                    <template slot-scope="scope">
+                        <el-input v-if="activeEditor(scope)" v-model="scope.row.field"
+                                  v-clickotherside="handerOutSide"></el-input>
+                        <span v-else v-text="scope.row.field"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="displayName" label="显示名称" min-width="120">
+                    <template slot-scope="scope">
+                        <el-input v-if="activeEditor(scope)" v-model="scope.row.displayName"
+                                  v-clickotherside="handerOutSide"></el-input>
+                        <span v-else v-text="scope.row.displayName"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="type" label="类型" min-width="120">
+                    <template slot-scope="scope">
+                        <el-select ref="tabSelect" v-if="activeEditor(scope)" v-model="scope.row.type"
+                                   placeholder="请选择类型" @change="handlerTypeSelect(scope,$event)">
+                            <el-option :value="key" :label="value" v-for="(value,key) in typeSelect"></el-option>
+                        </el-select>
+                        <span v-else v-text="typeSelect[scope.row.type]"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="len" label="长度" min-width="110">
+                    <template slot-scope="scope">
+                        <el-input-number :min="0" v-if="activeEditor(scope)" v-model="scope.row.len" autofocus
+                                         v-clickotherside="handerOutSide"></el-input-number>
+                        <span v-else v-text="scope.row.len || '不限' "></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="defaultValue" label="默认值">
+                    <template slot-scope="scope">
+                        <el-input v-if="activeEditor(scope)" v-model="scope.row.defaultValue" autofocus
+                                  v-clickotherside="handerOutSide"></el-input>
+                        <span v-else v-text="scope.row.defaultValue"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="required" label="非空">
+                    <template slot-scope="scope">
+                        <el-checkbox :true-label="1" :false-label="0" v-model="scope.row.required"></el-checkbox>
+                    </template>
+                </el-table-column>
+                <el-table-column property="remark" label="备注">
+                    <template slot-scope="scope">
+                        <el-input type="textarea" v-if="activeEditor(scope)" v-model="scope.row.remark"
+                                  v-clickotherside="handerOutSide"></el-input>
+                        <span v-else v-text="scope.row.remark"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column property="auto" label="自动生成">
+                    <template slot-scope="scope">
+                        <el-select ref="tabSelect" v-if="activeEditor(scope)" placeholder="请选择类型"
+                                   @change="handlerAutoSelect(scope,$event)">
+                            <el-option :value="key" :label="value" v-for="(value,key) in autoSelect"></el-option>
+                        </el-select>
+                        <span v-else v-text="autoSelect[scope.row.auto]"></span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150">
+                    <template slot-scope="scope">
+                        <el-button-group>
+                            <el-button size="mini" type="danger" icon="el-icon-delete"
+                                       @click="removeRow(scope.$index)"></el-button>
+                        </el-button-group>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div slot="footer">
+                <el-button size="mini" type="primary" @click="save">保存</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 <script>
     App.moule({
-        data :function() {
+        data: function () {
             return {
-                list:[],
-                total:0,
-                document:{},
-                typeSelect:{
-                    "string":"字符串类型",
-                    "number":"数字类型",
-                    "bool":"布尔类型"
+                list: [],
+                total: 0,
+                pageSize: 10,
+                keyword:"",
+                document: {items: []},
+                funcDetaiDialog: false,
+                typeSelect: {
+                    "string": "字符串类型",
+                    "number": "数字类型",
+                    "bool": "布尔类型"
                 },
-                autoSelect:{
-                    "unset":" ",
-                    "increment":"自增",
-                    "uuid":"UUID"
+                autoSelect: {
+                    "unset": " ",
+                    "increment": "自增",
+                    "uuid": "UUID"
                 },
-                tableData: [],
-                editColumn:null,
-                editRow:null
+                editColumn: null,
+                editRow: null
             }
         },
-        methods:{
-            activeEditor(scope){
-                return this.editColumn && scope.column.id == this.editColumn.id
-                        && this.editRow == scope.row
+        mounted() {
+            this.queryPage();
+        },
+        methods: {
+            queryPage(pageNum) {
+                pageNum = pageNum || 1;
+                App.post("/api/config/basicfunc/page/" + this.pageSize + "/" + pageNum).setData({keyword:this.keyword}).callSuccess(res => {
+                    this.total = res.data.total;
+                    this.list = res.data.list;
+                })
             },
-            handerOutSide(){
-                console.log(111)
+            sizeChange(pageSize) {
+                this.queryPage();
+            },
+            pageChange(pageSize) {
+                this.pageSize = pageSize;
+                this.queryPage(1);
+            },
+            toEditRow(row) {
+                this.funcDetaiDialog = true;
+                App.request("/api/config/basicfunc/get/" + row.id).callSuccess(res => {
+                    this.document = res.data;
+                })
+            },
+            toAdd() {
+                this.funcDetaiDialog = true;
+                this.document = {items: []};
+            },
+            activeEditor(scope) {
+                return this.editColumn && scope.column.id == this.editColumn.id
+                    && this.editRow == scope.row
+            },
+            handerOutSide() {
                 this.editColumn = null
                 this.editRow = null
             },
-            cellClick(row, column, cell, event){
-                if ( this.editColumn == column && this.editRow == row) return;
+            cellClick(row, column, cell, event) {
+                if (this.editColumn == column && this.editRow == row) return;
                 this.editColumn = column;
                 this.editRow = row;
             },
-            handlerAutoSelect(scope,v){
-                this.$nextTick(()=>{
-                    this.$set(scope.row,'autoName',this.$refs.tabSelect.selectedLabel)
+            handlerAutoSelect(scope, v) {
+                this.$nextTick(() => {
+                    this.$set(scope.row, 'autoName', this.$refs.tabSelect.selectedLabel)
                     this.handerOutSide()
                 })
             },
-            handlerTypeSelect(scope,v){
-                this.$nextTick(()=>{
-                    this.$set(scope.row,'typeName',this.$refs.tabSelect.selectedLabel)
+            handlerTypeSelect(scope, v) {
+                this.$nextTick(() => {
+                    this.$set(scope.row, 'typeName', this.$refs.tabSelect.selectedLabel)
                     this.handerOutSide()
                 })
             },
-            save(){
-                this.document.items = this.tableData;
+            save() {
                 var url = this.document.id ? "/api/config/basicfunc/update" : "/api/config/basicfunc/add";
-                App.post(url).setData(this.document).callSuccess(res=>{
+                App.post(url).setData(this.document).callSuccess(res => {
                     App.success("保存成功");
-                    this.$set(this.document,"id",res.data)
+                    this.$set(this.document, "id", res.data)
+                    this.funcDetaiDialog = false;
                 })
             },
-            addRow(){
+            addRow() {
                 var row = {
                     field: '',
                     displayName: '',
                     type: 'string',
-                    len:0,
-                    defaultValue:"",
-                    remark:"",
-                    auto:"",
-                    autoName:"",
+                    len: 0,
+                    defaultValue: "",
+                    remark: "",
+                    auto: "",
+                    autoName: "",
                 }
-                this.tableData.push(row);
+                this.document.items.push(row);
             },
-            removeRow(row){
-                this.$delete(this.tableData,row)
+            removeRow(row) {
+                this.$delete(this.document.items, row)
             }
         }
     });
