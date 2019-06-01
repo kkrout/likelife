@@ -58,6 +58,9 @@ App.start({
         getMenuById(menuId){
             return this.menuIndexMap.get(menuId);
         },
+        getCurrentMenu(){
+            return this.menuIndexMap.get(this.activeMenuId);
+        },
         menuSelect(v){
             var menu = this.getMenuById(v)
             if ( v ){

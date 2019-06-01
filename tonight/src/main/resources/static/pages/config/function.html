@@ -25,8 +25,14 @@
             };
         },
         mounted(){
+            var menu = this.$root.getCurrentMenu();
+            if ( !menu || !menu.funcId ){
+                App.error('找不到功能');
+                return
+            }
+            var funcId = menu.funcId;
             //加载文档配置
-            App.request("/api/config/basicfunc/get/5cd3ec6979faaa72f4ad7a66").callSuccess(res => {
+            App.request("/api/config/basicfunc/get/"+funcId).callSuccess(res => {
                 if ( !res.data ) return;
                 this.document = res.data;
                 this.tableStructs = res.data.items;
