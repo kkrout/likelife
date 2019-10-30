@@ -18,15 +18,24 @@ function NavTag(menu) {
 
 Vue.component('d-tag-nav', {
     template: `
-        <div class="tag-nav-wrapper">
-            <div class="tag-nav-body">
-               <div :class="{'tag-nav':true,'tag-nav-active': item == currentTag }" @mouseover="hoverTag=item" @mouseout="hoverTag=null"
-                    v-for="item in tagList" @click="onTagClick(item,$event)">
-                    <i :class="item.iconCls" v-if="item.iconCls" ></i>
-                    <span v-text="item.name" ></span>
-                    <div class="tag-nav-bar" v-if="item == currentTag" ></div>
-                    <i @click="closeTag(item)" v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:14px;right:2px;font-size: 12px;"></i>
-               </div>   
+        <div style="display: flex;">
+            <div class="tag-nav-wrapper">
+                <div class="tag-nav-body" ref="tagBody">
+                   <div :class="{'tag-nav':true,'tag-nav-active': item == currentTag }" @mouseover="hoverTag=item" @mouseout="hoverTag=null"
+                        v-for="item in tagList" @click="onTagClick(item,$event)">
+                        <i :class="item.iconCls" v-if="item.iconCls" ></i>
+                        <span v-text="item.name" ></span>
+                        <div class="tag-nav-bar" v-if="item == currentTag" ></div>
+                        <i @click="closeTag(item)" v-show="hoverTag == item && item.menuId != '#1' " class="el-icon-close" style="position: absolute;top:14px;right:2px;font-size: 12px;"></i>
+                   </div>
+                </div>
+            </div>
+            <div draggable style="width: 40px;overflow: hidden;height: 40px;line-height: 40px;">
+                <i class="el-icon-caret-left" @click="moveRight" ></i>
+                <i class="el-icon-caret-right" @click="moveLeft" ></i>
+            </div>
+            <div style="width: 200px;overflow: hidden;height: 40px;line-height: 40px;">
+                <slot name="left"></slot>
             </div>
         </div>
     `,
@@ -41,9 +50,14 @@ Vue.component('d-tag-nav', {
         }
     },
     created() {
-        //初始化
-        this.tagList.push(this.homeNav);
-        this.allTagsMap.set(this.homeNav.id, this.homeNav);
+        var dataJson = window.localStorage.getItem("LOCAL_TAG_NAV_DATA");
+        if ( dataJson) {
+            this.tagList = JSON.parse(dataJson);
+        }else{
+            //初始化
+            this.tagList.push(this.homeNav);
+        }
+        this.createIndex();
     },
     data() {
         return {
@@ -65,9 +79,21 @@ Vue.component('d-tag-nav', {
                     this.$emit('on-switch', n);
                 }
             }
+        },
+        tagList(){
+            window.localStorage.setItem("LOCAL_TAG_NAV_DATA",JSON.stringify(this.tagList));
         }
     },
     methods: {
+        createIndex(){
+            var caches = [];
+            this.tagList.forEach(item=>{
+                this.allTagsMap.set(item.id, item);
+                caches.push(item.id)
+            })
+            //页面缓存
+            this.$root.cacheList = caches;
+        },
         //自动切换导航
         initNav() {
             $.history.init(hash => {
@@ -90,9 +116,7 @@ Vue.component('d-tag-nav', {
             this.currentTag = tag;
         },
         addNavTag(menu) {
-            console.log(menu);
             var m = typeof menu == "string" ? this.$root.getMenuByComp(menu) : menu;
-            console.log(m);
             //建立临时tag
             var tag;
             if ( !m ){
@@ -108,6 +132,7 @@ Vue.component('d-tag-nav', {
             return tag;
         },
         closeTag(item){
+            item = item || this.currentTag;
             var index = this.tagList.indexOf(item);
             this.$delete(this.tagList,index);
             this.$root.$delete(this.$root.cacheList,index);
@@ -188,6 +213,52 @@ Vue.component('d-tag-nav', {
         },
         getCurrentTag(){
             return this.currentTag;
+        },
+        moveLeft(){
+            var tagBody = $(this.$refs.tagBody);
+            var left = -parseInt(tagBody.css("left"))+1;
+            var width = 0;
+            $(this.$refs.tagBody).children().each(function(){
+                width += $(this).outerWidth(true);
+                if ( width > left){
+                    return false;
+                }
+            })
+            $(this.$refs.tagBody).css({left:-width});
+        },
+        moveRight(){
+            var tagBody = $(this.$refs.tagBody);
+            var left = -parseInt(tagBody.css("left"))-1;
+            var width = 0;
+            $(this.$refs.tagBody).children().each(function(){
+                var avWidth = $(this).outerWidth(true);
+                console.log(width + avWidth,left)
+                if ( width + avWidth > left){
+                    return false;
+                }
+                width += avWidth;
+            })
+            $(this.$refs.tagBody).css({left:-width});
+        },
+        autoMove(){
+            //以当前节点为目标进行移动
+            var tagBody = $(this.$refs.tagBody);
+            var left = -parseInt(tagBody.css("left"))-1;
+            var width = 0;
+            var actTag = $(this.$refs.tagBody).find("tag-nav-active");
+            var actLeft = actTag.position().left + actTag.outerWidth(true) - left;
+            var bodyWidth = $(this.$refs.tagBody).width();
+            if ( actLeft > bodyWidth ){
+                $(this.$refs.tagBody).children().each(function(){
+                    var avWidth = $(this).outerWidth(true);
+                    if ( actLeft - avWidth > left){
+                        return false;
+                    }
+                    width += avWidth;
+                })
+            }
+
+            $(this.$refs.tagBody).css({left:-width});
         }
     }
 
